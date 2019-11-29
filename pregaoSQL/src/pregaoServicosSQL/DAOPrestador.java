@@ -1,4 +1,4 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -18,11 +18,18 @@ public class DAOPrestador {
 				Statement st = con.createStatement();
 				String cmd = "insert into prestador values (\'"+c.getEmail()+"\', \'"+c.getNome()+"\',\'"+c.getTelefone()+"\')";
 				st.execute(cmd);
+			
+				String cmd3 = "SET foreign_key_checks = 0";
+				st.execute(cmd3);
 				
 				for(TipoDeServico t:c.servicoRealizado) {
-					cmd = "insert into prest_servPossiveis values(\'"+c.getNome()+"\',"+t+")";
+					cmd = "insert into prest_servPossiveis values(\'"+c.getNome()+"\',"+t.getCodigo()+")";
 					st.execute(cmd);
 				}
+				
+				cmd3 = "SET foreign_key_checks = 1";
+				st.execute(cmd3);
+				
 				st.close();
 			}
 			
@@ -39,8 +46,13 @@ public class DAOPrestador {
 			Prestador cont= pesquisarPor(c.getNome());
 			if(cont != null) {
 				Statement st = con.createStatement();
-				String cmd = "update prestador set nome= \'"+nome+"\', email= \'"+email+"\', telefone= \'"+telefone+"\' where nome = \'"+cont.getNome()+"\'";
+				String cmd = "update prestador set nome= \'"+nome+"\', email= \'"+email+"\', telefone= \'"+telefone+"\' "
+						+ "where nome = \'"+cont.getNome()+"\'";
 				st.execute(cmd);
+				
+				cmd= "update prest_servPossiveis set prestador = \'"+nome+"\' where prestador = \'"+nome+"\'";
+				st.execute(cmd);
+				
 				st.close();
 			}	
 		}catch(Exception e){
@@ -58,6 +70,16 @@ public class DAOPrestador {
 				Statement st = con.createStatement();
 				String cmd = "delete from prestador where nome = \'" +nome+"\'";
 				st.execute(cmd);
+				
+				String cmd3 = "SET foreign_key_checks = 0";
+				st.execute(cmd3);
+				
+				cmd= "delete from prest_servPossiveis where prestador = \'"+nome+"\'";
+				st.execute(cmd);
+				
+				cmd3 = "SET foreign_key_checks = 1";
+				st.execute(cmd3);
+				
 				st.close();
 			}	
 			
@@ -89,6 +111,9 @@ public class DAOPrestador {
 	        	String telefone = rs.getString("telefone");
 	        	Prestador p= new Prestador(email,nome,telefone);
 	        	
+	        	String cmd3 = "SET foreign_key_checks = 0";
+	    		st.execute(cmd3);
+	        	
 	        	String cmdP = "select * from prest_servPossiveis where prestador = \'"+nome+"\'";
 	        	ResultSet rsP = st.executeQuery(cmdP);
 	        	
@@ -98,6 +123,10 @@ public class DAOPrestador {
 	        		TipoDeServico tp = servicoP.pesquisarPor(rsP.getInt("cod_tipo"));
 	        		p.servicoRealizado.add(tp);
 	        	}
+	        	
+	        	cmd3 = "SET foreign_key_checks = 1";
+	    		st.execute(cmd3);
+	        	
 	        	st.close();
 	        	return p;
 	        }   
@@ -124,6 +153,17 @@ public class DAOPrestador {
 	        	String telefone = rs.getString("telefone");
 	        	String nome= rs.getString("nome");
 	        	Prestador p= new Prestador(email,nome,telefone);
+	        	
+	        	String cmdP = "select * from prest_servPossiveis where prestador = \'"+nome+"\'";
+	        	ResultSet rsP = st.executeQuery(cmdP);
+	        	
+	        	if(rsP.next())
+	        	{
+	        		DAOTipoDeServico servicoP= new DAOTipoDeServico();
+	        		TipoDeServico tp = servicoP.pesquisarPor(rsP.getInt("cod_tipo"));
+	        		p.servicoRealizado.add(tp);
+	        	}
+	        	
 	        	pesquisa.add(p);
 	        }
 	        
@@ -134,4 +174,18 @@ public class DAOPrestador {
 		
 		return pesquisa;
 	}
+	
+	public void inserirTipoDeServio(Prestador p,TipoDeServico t) {
+		Connection con;
+		try {
+			con = Conexao.getConexao();
+	        Statement st = con.createStatement();
+	        String cmd = "insert into prest_servPossiveis values(\'"+p.getNome()+"\',"+t.getCodigo()+")";
+			st.execute(cmd);
+	        
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

@@ -1,4 +1,4 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 import java.util.ArrayList;
 
@@ -57,7 +57,12 @@ public class Usuario {
 	}
 	
 	public String getAvaliacoesObservacoes2() {
-		return avaliacoesObservacoes.get(avaliacoesObservacoes.size());
+		if(avaliacoesObservacoes.size()==0) {
+			return "Nada";
+		}else {
+			return avaliacoesObservacoes.get(avaliacoesObservacoes.size()-1);
+		}
+		
 	}
 
 	public void setAvaliacoesObservacoes(ArrayList<String> avaliacoesObservacoes) {

@@ -1,4 +1,4 @@
-	package pregaoServicosSQL;
+	package felipeDaRochaTorres.pregaoServicosSQL;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,6 +25,7 @@ public class Servico {
 		this.setTipo(tipo);
 		setContratado(false);
 		setFinalizado(false);
+		this.dataFinalizado=new Date();//iniciando para nao ir null para o BD
 	}
 
 	public double getValor() {

@@ -1,4 +1,4 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 public class TipoDeServico {
 	private int cod;

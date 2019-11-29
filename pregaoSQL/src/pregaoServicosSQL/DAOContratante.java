@@ -1,4 +1,4 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -18,7 +18,6 @@ public class DAOContratante {
 				Statement st = con.createStatement();
 				String cmd = "insert into contratante values (\'"+c.getEmail()+"\', \'"+c.getNome()+"\',\'"+c.getTelefone()+"\')";
 				st.execute(cmd);
-				
 				st.close();
 			}	
 		}catch(Exception e){
@@ -34,7 +33,8 @@ public class DAOContratante {
 			Contratante cont= pesquisarPor(c.getNome());
 			if(cont != null) {
 				Statement st = con.createStatement();
-				String cmd = "update contratante set nome= \'"+nome+"\', email= \'"+email+"\', telefone= \'"+telefone+"\' where nome = \'"+cont.getNome()+"\'";
+				String cmd = "update contratante set nome= \'"+nome+"\', email= \'"+email+"\', telefone= \'"+telefone+"\'"
+						+ " where nome = \'"+cont.getNome()+"\'";
 				st.execute(cmd);
 				st.close();
 			}	
@@ -65,13 +65,22 @@ public class DAOContratante {
 		Connection con;
 		con = Conexao.getConexao();
 		Statement st = con.createStatement();
-		String cmd = "delete from contratante";
+		
+		String cmd = "SET foreign_key_checks = 0";
 		st.execute(cmd);
+		
+		cmd = "delete from contratante";
+		st.execute(cmd);
+		
+		cmd = "SET foreign_key_checks = 1";
+		st.execute(cmd);
+		
 		st.close();	
+		
 	}
 		
 
-	public Contratante pesquisarPor(String nome)throws ClassNotFoundException, SQLException {
+	public Contratante pesquisarPor(String nome) throws ClassNotFoundException, SQLException {
 		Connection con;
 		try {
 			con = Conexao.getConexao();
@@ -100,7 +109,7 @@ public class DAOContratante {
 		try {
 			con = Conexao.getConexao();
 	        Statement st = con.createStatement();
-	        String cmd = "select * from prestador";
+	        String cmd = "select * from contratante";
 	        ResultSet rs = st.executeQuery(cmd);
 	        
 	        if(rs.next()) {

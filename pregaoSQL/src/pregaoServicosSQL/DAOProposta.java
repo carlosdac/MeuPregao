@@ -1,4 +1,4 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -16,11 +16,20 @@ public class DAOProposta {
 			
 			if(p == null) {
 				Statement st = con.createStatement();
+				
 				String cmd = "insert into proposta (preco,prazo,nome_prest,email) values("
-				+u.getValor()+","+u.getPrazo()+",\'"+u.getPrestador().getNome()+"\' , \'"+u.getEmailPrestador()+"\')";
+						+u.getValor()+","+u.getPrazo()+",\'"+u.getPrestador().getNome()+"\' , \'"+u.getEmailPrestador()+"\')";
 				st.execute(cmd);
-				cmd = "insert into prest_proposta values(\'"+u.getPrestador().getNome()+"\',\'"+u.getValor()+"\' , \'"+u.getEmailPrestador()+"\')";
+				
+				String cmd3 = "SET foreign_key_checks = 0";
+				st.execute(cmd3);
+				
+				cmd = "insert into prest_proposta values(\'"+u.getPrestador().getNome()+"\',\'"+u.getValor()+"\' , "
+						+ "\'"+u.getEmailPrestador()+"\')";
 				st.execute(cmd);
+				
+				cmd3 = "SET foreign_key_checks = 1";
+				st.execute(cmd3);
 				st.close();
 			}
 			
@@ -39,6 +48,19 @@ public class DAOProposta {
 				Statement st = con.createStatement();
 				String cmd = "delete from proposta where valor = " +valor+", cod_servico= "+codigo;
 				st.execute(cmd);
+				
+				DAOProposta daoP = new DAOProposta();
+				Proposta prop = daoP.pesquisarPor(codigo,valor);
+				
+				String cmd3 = "SET foreign_key_checks = 0";
+				st.execute(cmd3);
+				
+				cmd="delete from prest_proposta where prestador ="+prop.getPrestador().getNome();
+				st.execute(cmd);
+				
+				cmd3 = "SET foreign_key_checks = 1";
+				st.execute(cmd3);
+				
 				st.close();
 			}	
 		}catch(Exception e){
@@ -51,6 +73,17 @@ public class DAOProposta {
 		con = Conexao.getConexao();
 		Statement st = con.createStatement();
 		String cmd = "delete from proposta";
+		
+		String cmd3 = "SET foreign_key_checks = 0";
+		st.execute(cmd3);
+		
+		cmd="delete from prest_proposta";
+		st.execute(cmd);
+		
+		cmd3 = "SET foreign_key_checks = 1";
+		st.execute(cmd3);
+		
+		
 		st.execute(cmd);
 		st.close();	
 	}
@@ -67,6 +100,8 @@ public class DAOProposta {
 					String cmd = "update proposta set preco= "+preco+", prazo= "+prazo+", nome_prest= \'"+nome_prest+"\' , email = \'"
 					+email+" \' where cod_servico = "+u.getCodigoServico()+", preco = "+u.getValor();
 					st.execute(cmd);
+					
+					cmd="update prest_proposta set prestador = \'"+nome_prest+"\' where prestador = "+u.getPrestador().getNome();
 					st.close();
 				}	
 		}catch(Exception e){
@@ -80,7 +115,8 @@ public class DAOProposta {
 		try {
 			con = Conexao.getConexao();
 	        Statement st = con.createStatement();
-	        String cmd = "select * from proposta where codigo = "+codigo+", preco ="+valor;
+	        String cmd = "select * from proposta where preco = "+valor+" AND cod_servico = "+codigo;
+	        st.execute(cmd);
 	        ResultSet rs = st.executeQuery(cmd);
 	        
 	        if(rs.next()) {

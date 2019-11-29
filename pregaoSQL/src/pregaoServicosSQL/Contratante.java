@@ -1,4 +1,4 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 public class Contratante extends Usuario{
 	private boolean servicoEmVigor;

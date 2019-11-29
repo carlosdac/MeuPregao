@@ -1,5 +1,6 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -68,24 +69,47 @@ public class MeuPregao implements InterfacePregao{
 		
 		// Só podemos ter um servico aberto por contratante em um dado momento.
 		public int cadastrarServico(String emailContratante, String descricao, double valor, int prazoMaximo, int codTipoDeServico) {
-			Contratante c = pesquisarContratante(emailContratante);		 
-			if(c==null || c.isServicoEmVigor()) {return -1;}//ja tem um contrato ativo no momento ou nao existe
-			if(pesquisarTipoDeServicoCod(codTipoDeServico)==false){return -1;}
+			Contratante c= new Contratante("1","2","3");
 			
-			c.setServicoEmVigor(true);
+			DAOContratante daoC = new DAOContratante();
+			int achou=0;
+			
+			ArrayList<Contratante> c2 =daoC.pesquisarTodos();
+			
+			for(Contratante c1:c2) {
+				if(c1.getEmail().equals(emailContratante.trim())){
+					c=c1;
+					achou=1;
+				}
+			}
+			
+			if(achou==0) {
+				return -2;//n�o achou o contratante
+			}
+			
+			
+			DAOServico daoS = new DAOServico();
+			
+			for(Servico serv:daoS.pesquisarTodos()) {
+				if(serv.getContratante().getEmail()==emailContratante && !serv.isContratado()) {
+					return -1;//ja est� cadastrado e n�o foi contratado ainda
+				}
+			}
+			
 			Servico s = new Servico(emailContratante, descricao, valor, prazoMaximo, codTipoDeServico);
 			s.setContratante(c);
-			s.setCodigoServico(servicos.size()+1);
-			servicos.add(s);
 			
-			return servicos.size();
+			daoS.inserir(s);
+			
+			return 1;
 		}
 
 		// Lista todos os serviços que atendam aos critérios de pesquisa (>=)
 		public ArrayList<Servico> listarServicos(double valor, int prazoMaximo, int tipo, boolean contratado, boolean finalizado, int avaliacaoMediaContratante){
-			 ArrayList<Servico> s = new  ArrayList<Servico>();
+			DAOServico daoS = new DAOServico();
+			ArrayList<Servico> s = new  ArrayList<Servico>();
 			 
-			 for(Servico serv:servicos) {
+			 for(Servico serv:daoS.pesquisarTodos()) {
 				 if( (serv.isContratado()==contratado) && (serv.isFinalizado()==finalizado) && ( valor==0 || serv.getValor()>=valor) && (prazoMaximo==0 || serv.getPrazoMaximo()>=prazoMaximo ) && (tipo==0 || serv.getTipo()==tipo) && (avaliacaoMediaContratante==0 || serv.getAvaliacaoMediaContratante()>=avaliacaoMediaContratante)) {
 						s.add(serv);
 				 }
@@ -97,61 +121,111 @@ public class MeuPregao implements InterfacePregao{
 		
 		// Verifica que não existe já cadastrado como contratante. Email deve ser único.
 		public void cadastrarContratante(String email, String nome, String telefone) {
-			if(pesquisarContratante(email) == null) {
-				Contratante c = new Contratante(email, nome, telefone);
-				contratantes.add(c);
+			DAOContratante daoC = new DAOContratante();
+			Contratante c = new Contratante("1","2","3") ;
+			try {
+				c = daoC.pesquisarPor(nome);
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			
+			if(c!=null) {return;}//ja existe um contratante cadastrado com esses dados
+			
+			c = new Contratante(email,nome,telefone);
+			try {
+				daoC.inserir(c);
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 		
 		
 		
 		// Verifica que não existe já cadastrado como prestador. Email deve ser único.
 		public void cadastrarPrestador(String email, String nome, String telefone) {
-			if(pesquisarPrestador(email) == null) {
-				Prestador p = new Prestador(email, nome, telefone);
-				prestadores.add(p);
+			DAOPrestador daoP = new DAOPrestador();
+			Prestador p = new Prestador("1","2","3");
+			try {
+				p = daoP.pesquisarPor(nome);
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			
+			if(p!=null) {return;}//ja existe um contratante cadastrado com esses dados
+			
+			p = new Prestador(email,nome,telefone);
+			try {
+				daoP.inserir(p);
+			} catch (ClassNotFoundException | SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 
 		// Verifica que prestador e serviço existem.
 		public void adicionarServicoPrestador(String email, int tipo) {
-			Servico s = pesquisarServicoTipo(tipo);
-				if( s != null) {
-					for(Prestador p:prestadores) {
-						if(p.getEmail().equals(email)) {
-							TipoDeServico t = new TipoDeServico(s.getCodigoServico(), s.getDescricao());
-							p.servicoRealizado.add(t);
-						}
+			DAOTipoDeServico daoT = new DAOTipoDeServico();
+			DAOPrestador daoP = new DAOPrestador();
+			
+			TipoDeServico t = daoT.pesquisarPor(tipo);
+			if( t != null) {
+				for(Prestador p:daoP.pesqusisarTodos()) {
+					if(p.getEmail()== email) {
+						daoP.inserirTipoDeServio(p, t);
 					}
 				}
+			}
 			
 		}
 		
 		// Verifica que não existe já cadastrado. Código e descrição devem ser únicos.
 		public void adicionarTipoDeServico(int cod, String descr) {
-			if(pesquisarTipoDeServico(cod,descr)==null) {
-				TipoDeServico t = new TipoDeServico(cod,descr);
-				tipos.add(t);
+			DAOTipoDeServico daoT = new DAOTipoDeServico();
+			if(daoT.pesquisarPor(cod) != null) {
+				return;// ja existe
 			}
+			
+			TipoDeServico t =new TipoDeServico(cod,descr);
+			daoT.inserir(t);
+			
 		}
 
 		// Cadastra proposta de um prestador para um serviço. Deve verificar compatibilidade entre os tipos de servicós
 		// prestados pelo prestador e o serviço solicitado. Valor e prazo devem ser no máximo igual ao previsto.
 		public void cadastrarProposta(int codigoServico, String emailPrestador, double valor, int prazo) {
-			Prestador p = pesquisarPrestador(emailPrestador);
-			if(p==null) {return;}
-			Servico s = pesquisarServicoCodigo(codigoServico);
-			if(s==null) {return;}
+			DAOProposta daoP = new DAOProposta();
+			DAOPrestador daoPrest = new DAOPrestador();
+			DAOServico daoS = new DAOServico();
+			
+			Prestador p = new Prestador("1","2","3");
+			
+			for(Prestador p1:daoPrest.pesqusisarTodos()) {
+				if(p1.getEmail()==emailPrestador) {
+					p=p1;
+				}
+			}
+			if(p.getNome()=="2") {return;}//prestador nao existe
+			
+			Servico s = daoS.pesquisarPor(codigoServico);
+			if(s==null) {return;}//Servico nao existe
 			
 			for(TipoDeServico prestado : p.servicoRealizado) {
-				if(prestado.getCodigo()==s.getCodigoServico()) {
+				if(prestado.getCodigo()==s.getTipo()) {
 					if(s.getPrazoMaximo()>=prazo && s.getValor()>=valor) {
 						Proposta prop = new Proposta(codigoServico, emailPrestador, valor, prazo);
 						prop.setPrestador(p);
-						s.propostas.add(prop);
+						
+						daoP.inserir(prop);
 					}
+				
 				}
 			}
+			
 		}
 		
 		// valor 0 significa todas ou então apenas valores abaixo de um valor. 
@@ -159,10 +233,10 @@ public class MeuPregao implements InterfacePregao{
 		// avaliacao 0 significa todas ou então apenas avaliações acima de um limite mínimo.
 		// somente as não contratadas e finalizadas
 		public ArrayList<Proposta> listarPropostas(int codigoServico, double valor, int prazoMaximo, int avaliacaoMediaPrestador){
+			DAOServico daoS = new DAOServico();
 			ArrayList<Proposta> prop = new ArrayList<Proposta>();
-			Servico s = pesquisarServicoCodigo(codigoServico);
 			
-			for(Proposta p : s.propostas) {
+			for(Proposta p :daoS.pesquisarPor(codigoServico).propostas) {
 					if( (valor==0 || p.getValor()<=valor) && (prazoMaximo==0 || p.getPrazo()<=prazoMaximo) && (avaliacaoMediaPrestador==0 || p.getAvaliacaoMediaPrestador()>=avaliacaoMediaPrestador)) {
 						prop.add(p);
 					}
@@ -174,48 +248,60 @@ public class MeuPregao implements InterfacePregao{
 
 		// Marca serviço como contratado liberando para o cadastro de outros serviços pelo contratante
 		public void contratarProposta(int codigoServico, String emailPrestador) {
-			Servico s = pesquisarServicoCodigo(codigoServico);
+			DAOServico daoS = new DAOServico();
+			Servico s = daoS.pesquisarPor(codigoServico);
 			
 			for(Proposta p : s.propostas) {
 				if(p.getEmailPrestador()==emailPrestador) {
-					p.setContratado(true);
+					//s.getContratante().setServicoEmVigor(true);
+					//p.setContratado(true);
 					s.setFinalizado(false);
 					s.setContratado(true);
-					s.getContratante().setServicoEmVigor(true);
+					
+					daoS.alterar(s);
 				}
 			}
 		}
 		
 		// Proposta deve ter sido contratada. Marca serviço como finalizado.
 		public void finalizarServico(int codigoServico, Date data) {
-			Servico s = pesquisarServicoCodigo(codigoServico);
-			if(s == null) {return;}
+			DAOServico daoS = new DAOServico();
+			Servico s = daoS.pesquisarPor(codigoServico);
+			if(s == null) {return;}//nao existe
 			
 			if(s.isContratado()) {
 				s.setContratado(true);
 				s.setDataFinalizado(data);
 				s.setFinalizado(true);
+				
+				daoS.alterar(s);//finaliza e coloca a data no BD
 			}
 		}
+		
 		// Servico deve ter sido finalizado. 
 		public void avaliarPrestador(int codigoServico, int nota, String observacoes) {
-			Servico s = pesquisarServicoCodigo(codigoServico);
+			DAOServico daoS = new DAOServico();
+			Servico s = daoS.pesquisarPor(codigoServico);
+			
+			DAOProposta daoP = new DAOProposta();
 			if(s != null && s.isFinalizado()) {
-				for(Proposta p : s.propostas) {
-					if(p.isContratado()) {
-						p.getPrestador().avaliacoesNota.add(nota);
-						p.getPrestador().getAvaliacoesObservacoes().add(observacoes);
-					}
-				}
+				//Proposta p = daoP.pesquisarPor(s.getCodigoServico(), s.)
+				
+				//p.getPrestador().avaliacoesNota.add(nota);
+				//p.getPrestador().getAvaliacoesObservacoes().add(observacoes);
+				//daoS.avaliarProposta(p);
 			}
 		}
 		
 		// Servico deve ter sido finalizado.
 		public void avaliarContratante(int codigoServico, int nota, String observacoes) {
-			Servico s = pesquisarServicoCodigo(codigoServico);
+			DAOServico daoS = new DAOServico();
+			Servico s = daoS.pesquisarPor(codigoServico);
+			
 			if(s!= null && s.isFinalizado()){
 				s.getContratante().avaliacoesNota.add(nota);
 				s.getContratante().getAvaliacoesObservacoes().add(observacoes);
+				daoS.avaliarContratante(s);
 			}
 			
 		}

@@ -1,17 +1,17 @@
-package pregaoServicosSQL;
+package felipeDaRochaTorres.pregaoServicosSQL;
 
 import static org.junit.Assert.assertEquals;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 
 import org.junit.Test;
 
 
-import pedroSantosNeto.pregaoServicoBD.bd.Conexao;
-
 public class TesteMeuPregaoReduzido{
 	Conexao con = new Conexao();
+	//Connection con = Conexao.getConexao();
 	@Test
 	public void testarCadastroDeServico() {
 		con.apagar();
