@@ -69,13 +69,14 @@ public class MeuPregao implements InterfacePregao{
 		
 		// Só podemos ter um servico aberto por contratante em um dado momento.
 		public int cadastrarServico(String emailContratante, String descricao, double valor, int prazoMaximo, int codTipoDeServico) {
-			Contratante c= new Contratante("1","2","3");
+			Contratante c= new Contratante(emailContratante, "dcd", "evejvn");
 			
 			DAOContratante daoC = new DAOContratante();
 			int achou=0;
 			
 			ArrayList<Contratante> c2 =daoC.pesquisarTodos();
 			
+
 			for(Contratante c1:c2) {
 				if(c1.getEmail().equals(emailContratante.trim())){
 					c=c1;

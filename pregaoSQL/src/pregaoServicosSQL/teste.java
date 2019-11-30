@@ -31,10 +31,14 @@ class teste {
 		pregao.cadastrarContratante("erico@ufpi.edu.br", "Erico Leao", "7777-7777");
 		
 		pregao.cadastrarServico("pasn@ufpi.edu.br", "Corte de grama em jardim de 20m2", 100, 2, 1);
-		pregao.cadastrarServico("rai@ufpi.edu.br", "Instalacao de tomadas de tras pinos", 80, 2, 2);
-		pregao.cadastrarServico("erico@ufpi.edu.br", "Instalacao de tomadas de quatro pinos", 70, 2, 2);
-		
 		ArrayList<Servico> servs = pregao.listarServicos(0, 0, 0, false, false, 0);
+		assertEquals(1, servs.size());
+		pregao.cadastrarServico("rai@ufpi.edu.br", "Instalacao de tomadas de tras pinos", 80, 2, 1);
+		servs = pregao.listarServicos(0, 0, 0, false, false, 0);
+		assertEquals(2, servs.size());
+		pregao.cadastrarServico("erico@ufpi.edu.br", "Instalacao de tomadas de quatro pinos", 70, 2, 1);
+		
+		servs = pregao.listarServicos(0, 0, 0, false, false, 0);
 		assertEquals(3, servs.size());
 		con.apagar();
 	}
